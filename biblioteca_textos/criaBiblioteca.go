@@ -1,3 +1,5 @@
+// Cria uma biblioteca com muitos pastas com muitos arquivos.
+// Cada arquivo contém um número de palavras.
 package main
 
 import (
@@ -8,99 +10,86 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 )
 
-const DiferentWords int = 700000
-const MaxWordRepetition int = 5
-const NumberFolders int = 10
-const WordsPerFile int = 100
+const diferentWords int = 692000
+const numberFolders int = 10
+const wordsPerFile int = 68
 
-var scanner *bufio.Scanner
-var file *os.File
-
-var listOfWords []string = make([]string, DiferentWords)
-var wordCount int
-var folderCount int = 1
-var fileCount int = 1
-
+// Cria uma biblioteca com muitos pastas com muitos arquivos.
+// Cada arquivo contém um número de palavras.
 func main() {
-	openFile()
-	numberOfFiles := DiferentWords * MaxWordRepetition / WordsPerFile
-	fmt.Println("Number of Files: ", numberOfFiles)
-	dir := createDirectory()
-	createTextFile(500, dir)
+
+	startingTime := time.Now()
+	numberOfFiles := diferentWords * numberFolders / wordsPerFile
+	fmt.Println("Número de Arquivos: ", numberOfFiles)
+	filesPerFolder := numberOfFiles / numberFolders
+	fmt.Println("Números de Arquivos por Pasta: ", filesPerFolder)
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < numberFolders; i++ {
+		wg.Add(1)
+
+		wordList := make([]string, diferentWords)
+		file, err := os.Open("." + string(filepath.Separator) + "palavras_fonte.txt")
+		defer file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// go = paralelo -> 2 minutos
+		// sem go = série -> 4 minutos
+		go func(i int) {
+
+			wordCount := 0
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				wordList[wordCount] = scanner.Text()
+				wordCount++
+			}
+
+			rand.Seed(time.Now().UnixNano())
+			rand.Shuffle(len(wordList), func(i, j int) { wordList[i], wordList[j] = wordList[j], wordList[i] })
+
+			folderName := "pasta" + strconv.Itoa(i)
+			dir := "." + string(filepath.Separator) + folderName
+			os.Mkdir(dir, 0777)
+			for j := 0; j < filesPerFolder; j++ {
+				createTextFile(wordsPerFile, dir, wordList, j)
+				if j%(filesPerFolder/100) == 0 {
+					percentage := 100*j/filesPerFolder + 1
+					fmt.Println("Progresso: ", dir, "/", numberFolders, ": ", percentage, "%")
+				}
+			}
+
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	fmt.Println("Completado em ", time.Since(startingTime))
 }
 
-func openFile() {
-	file, err := os.Open("." + string(filepath.Separator) + "palavras_fonte.txt")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	scanner = bufio.NewScanner(file)
-	for scanner.Scan() {
-		listOfWords[wordCount] = scanner.Text()
-		wordCount++
-	}
-
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(listOfWords), func(i, j int) { listOfWords[i], listOfWords[j] = listOfWords[j], listOfWords[i] })
-
-	fmt.Println("Finished creating array")
-}
-
-func getNextWord() string {
-	if len(listOfWords) <= 0 {
-		openFile()
-	}
-	newWord := ""
-	for newWord == "" {
-		randomIndex := rand.Intn(len(listOfWords))
-
-		newWord = listOfWords[randomIndex]
-		listOfWords = remove(listOfWords, randomIndex)
-	}
-	//fmt.Println(newWord)
-	return newWord
-}
-
-func createTextFile(numberOfWords int, folderName string) {
-	slash := string(filepath.Separator)
-	dir := folderName + slash + "livro-" + strconv.Itoa(fileCount) + ".txt"
-	fmt.Println(dir)
+// Cria um arquivo com um número de palavras tiradas de um slice de strings.
+func createTextFile(numberOfWords int, folderName string, wordList []string, fileCount int) {
+	dir := folderName + string(filepath.Separator) + "livro-" + strconv.Itoa(fileCount) + ".txt"
+	//fmt.Println(dir)
 	file, err := os.Create(dir)
+	if err != nil {
+		panic(err)
+	}
 	defer file.Close()
-	check(err)
-
-	fileCount++
 
 	w := bufio.NewWriter(file)
-	for numberOfWords > 0 {
-		w.WriteString(getNextWord() + "\n")
-		numberOfWords--
+	for i := 0; i < numberOfWords; i++ {
+		newWord := wordList[len(wordList)-1]
+		wordList = wordList[:len(wordList)-1]
+		if newWord != "" {
+			w.WriteString(newWord + "\n")
+		}
 	}
-
 	w.Flush()
-}
-
-func createDirectory() string {
-	folderName := "pasta" + strconv.Itoa(folderCount)
-	folderCount++
-	dir := "." + string(filepath.Separator) + folderName
-	os.Mkdir(dir, 0777)
-	//fmt.Println(dir)
-	return dir
-}
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func remove(s []string, i int) []string {
-	s[len(s)-1], s[i] = s[i], s[len(s)-1]
-	return s[:len(s)-1]
 }
