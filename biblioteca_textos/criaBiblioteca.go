@@ -11,18 +11,25 @@ import (
 	"time"
 )
 
+const DiferentWords int = 700000
+const MaxWordRepetition int = 5
+const NumberFolders int = 10
+const WordsPerFile int = 100
+
 var scanner *bufio.Scanner
 var file *os.File
-var listOfWords []string = make([]string, 330000)
+
+var listOfWords []string = make([]string, DiferentWords)
 var wordCount int
 var folderCount int = 1
 var fileCount int = 1
 
 func main() {
 	openFile()
-
+	numberOfFiles := DiferentWords * MaxWordRepetition / WordsPerFile
+	fmt.Println("Number of Files: ", numberOfFiles)
 	dir := createDirectory()
-	createTextFile(100, dir)
+	createTextFile(500, dir)
 }
 
 func openFile() {
@@ -55,7 +62,7 @@ func getNextWord() string {
 		newWord = listOfWords[randomIndex]
 		listOfWords = remove(listOfWords, randomIndex)
 	}
-	fmt.Println(newWord)
+	//fmt.Println(newWord)
 	return newWord
 }
 
