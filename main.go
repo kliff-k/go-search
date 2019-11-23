@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"sync"
 )
 
@@ -9,6 +10,17 @@ func main() {
 
 	// Inicia o waitgroup utilizado pelas rotinas
 	var waitGroup sync.WaitGroup
+	var grep bool = false
+
+	// Recupera os argumentos da chamada ao programa
+	args := os.Args
+
+	// Ativa o modo GREP
+	if len(args) > 1 {
+		if args[1] == "-grep" {
+			grep = true
+		}
+	}
 
 	// Recupera os parametros passados pelo usuário
 	pattern, paths, extensions := window()
@@ -24,7 +36,7 @@ func main() {
 		waitGroup.Add(1)
 
 		// Executa a busca por nome e conteúdo
-		go search(&waitGroup, pattern, path, extensions)
+		search(&waitGroup, pattern, path, extensions, grep)
 
 	}
 

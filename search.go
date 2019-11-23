@@ -11,12 +11,16 @@ import (
 )
 
 // Função principal de busca
-func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions []string) {
+func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions []string, grep bool) {
 
 	// Constroi um objeto de expressão regular com base na entrada do usuário
 	regEx, errRegEx := regexp.Compile("(?i)" + pattern)
 	if errRegEx != nil {
 		log.Fatal(errRegEx)
+	}
+
+	if root == "" {
+		root = "."
 	}
 
 	// Caminha toda a árvore de diretórios com base no caminho fornecido pelo usuário
@@ -38,6 +42,8 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 					extensionValid = true
 				}
 			}
+		} else {
+			extensionValid = true
 		}
 
 		if !extensionValid {
@@ -51,11 +57,16 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 		}
 
 		// Verifica se o conteúdo do arquivo contém alguma menção ao termo fornecido
-		file, err := ioutil.ReadFile(path)
-		fileContent := string(file)
-		if regEx.MatchString(fileContent) {
-			println(info.Name())
-			return nil
+		if grep {
+			file, errFile := ioutil.ReadFile(path)
+			if errFile != nil {
+				log.Fatal(errFile)
+			}
+			fileContent := string(file)
+			if regEx.MatchString(fileContent) {
+				println(info.Name())
+				return nil
+			}
 		}
 
 		return nil
