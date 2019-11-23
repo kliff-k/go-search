@@ -1,32 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
+	"sync"
 )
 
 func main() {
 
-	var pathList []string
+	var waitGroup sync.WaitGroup
 
-	// Esta parte deve vir da interface gráfica.
-	pathList = append(pathList, "/home/<user>/comics")
-	pathList = append(pathList, "/mnt/<hd-externo>/hqs")
+	pattern, paths, extensions := window()
 
-	// As chamadas devem se adaptar para a biblioteca / busca
+	println("Resultados encontrados: ")
+	println("")
 
-	// Aqui dentro, cada path informado acima deve inicializar uma goroutine (Pegar de um dos exemplos)
-	for _, path := range pathList {
+	for _, path := range paths {
 
-		files, err := ioutil.ReadDir(path)
+		waitGroup.Add(1)
 
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, file := range files {
-			fmt.Println(file.Name())
-		}
+		search(&waitGroup, pattern, path, extensions)
+
 	}
+
+	waitGroup.Wait()
 
 }
