@@ -53,6 +53,7 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 		// Verifica se o nome do arquivo contem o termo fornecido
 		if regEx.MatchString(info.Name()) {
 			println(info.Name())
+			println("\t -> " + path)
 			return nil
 		}
 
@@ -65,6 +66,7 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 			fileContent := string(file)
 			if regEx.MatchString(fileContent) {
 				println(info.Name())
+				println("\t -> " + path)
 				return nil
 			}
 		}
