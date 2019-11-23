@@ -10,22 +10,28 @@ import (
 	"sync"
 )
 
+// Função principal de busca
 func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions []string) {
+
+	// Constroi um objeto de expressão regular com base na entrada do usuário
 	regEx, errRegEx := regexp.Compile("(?i)" + pattern)
 	if errRegEx != nil {
 		log.Fatal(errRegEx)
 	}
 
+	// Caminha toda a árvore de diretórios com base no caminho fornecido pelo usuário
 	errWalk := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		var extensionValid = false
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		// O sistema retorna somente arquivos, então ignora diretórios
 		if info.IsDir() {
 			return nil
 		}
 
+		// Se foi fornecido alguma extensão, verifica se o arquivo pertence a este tipo
+		var extensionValid = false
 		if len(extensions) > 0 {
 			for _, ext := range extensions {
 				if strings.HasSuffix(info.Name(), ext) {
@@ -38,11 +44,18 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 			return nil
 		}
 
-		file, err := ioutil.ReadFile(root + info.Name())
-		fileContent := string(file)
-
-		if regEx.MatchString(info.Name()) || regEx.MatchString(fileContent) {
+		// Verifica se o nome do arquivo contem o termo fornecido
+		if regEx.MatchString(info.Name()) {
 			println(info.Name())
+			return nil
+		}
+
+		// Verifica se o conteúdo do arquivo contém alguma menção ao termo fornecido
+		file, err := ioutil.ReadFile(path)
+		fileContent := string(file)
+		if regEx.MatchString(fileContent) {
+			println(info.Name())
+			return nil
 		}
 
 		return nil
@@ -52,6 +65,7 @@ func search(waitGroup *sync.WaitGroup, pattern string, root string, extensions [
 		log.Fatal(errWalk)
 	}
 
+	// Indica que a rotina terminou
 	waitGroup.Done()
 
 }
