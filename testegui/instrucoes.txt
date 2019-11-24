@@ -1,0 +1,22 @@
+1.  Abrir o promt de comando e entrar no diretorio "testegui".
+
+
+2.  Instalar as dependencias com os comandos abaixo:
+
+    go get github.com/lxn/walk
+    go get github.com/akavel/rsrc
+
+
+3.  Compilar o arquivo ".manifest" da aplicacao (exigencia do Windows para interface grafica):
+
+    rsrc -manifest testegui.exe.manifest -o rsrc.syso
+
+
+4.  Compilar o programa com a flag de nao utilizacao de prompt de comando:
+
+    go build -ldflags="-H windowsgui"
+
+
+5.  Executar o programa:
+
+    testegui.exe
