@@ -55,13 +55,31 @@ func main() {
 			rand.Shuffle(len(wordList), func(i, j int) { wordList[i], wordList[j] = wordList[j], wordList[i] })
 
 			folderName := "pasta" + strconv.Itoa(i)
-			dir := "." + string(filepath.Separator) + folderName
-			os.Mkdir(dir, 0777)
+			dirFolder := "." + string(filepath.Separator) + folderName
+			os.Mkdir(dirFolder, 0777)
 			for j := 0; j < filesPerFolder; j++ {
-				createTextFile(wordsPerFile, dir, wordList, j)
+
+				dir := dirFolder + string(filepath.Separator) + "livro-" + strconv.Itoa(j) + ".txt"
+				//fmt.Println(dir)
+				file, err := os.Create(dir)
+				if err != nil {
+					panic(err)
+				}
+				defer file.Close()
+
+				w := bufio.NewWriter(file)
+				for i := 0; i < wordsPerFile; i++ {
+					newWord := wordList[len(wordList)-1]
+					wordList = wordList[:len(wordList)-1]
+					if newWord != "" {
+						w.WriteString(newWord + "\n")
+					}
+				}
+				w.Flush()
+
 				if j%(filesPerFolder/100) == 0 {
 					percentage := 100*j/filesPerFolder + 1
-					fmt.Println("Progresso: ", dir, "/", numberFolders, ": ", percentage, "%")
+					fmt.Println("Progresso: ", dirFolder, "/", numberFolders, ": ", percentage, "%")
 				}
 			}
 
@@ -71,25 +89,4 @@ func main() {
 	wg.Wait()
 
 	fmt.Println("Completado em ", time.Since(startingTime))
-}
-
-// Cria um arquivo com um número de palavras tiradas de um slice de strings.
-func createTextFile(numberOfWords int, folderName string, wordList []string, fileCount int) {
-	dir := folderName + string(filepath.Separator) + "livro-" + strconv.Itoa(fileCount) + ".txt"
-	//fmt.Println(dir)
-	file, err := os.Create(dir)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	w := bufio.NewWriter(file)
-	for i := 0; i < numberOfWords; i++ {
-		newWord := wordList[len(wordList)-1]
-		wordList = wordList[:len(wordList)-1]
-		if newWord != "" {
-			w.WriteString(newWord + "\n")
-		}
-	}
-	w.Flush()
 }
