@@ -35,11 +35,11 @@ func main() {
 
 		wordList := make([]string, diferentWords)
 		file, err := os.Open("." + string(filepath.Separator) + "palavras_fonte.txt")
-		defer file.Close()
+
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		defer file.Close()
 		// go = paralelo -> 2 minutos
 		// sem go = série -> 4 minutos
 		go func(i int) {
@@ -61,13 +61,12 @@ func main() {
 
 				dir := dirFolder + string(filepath.Separator) + "livro-" + strconv.Itoa(j) + ".txt"
 				//fmt.Println(dir)
-				file, err := os.Create(dir)
-				if err != nil {
-					panic(err)
+				newFile, err2 := os.Create(dir)
+				if err2 != nil {
+					panic(err2)
 				}
-				defer file.Close()
 
-				w := bufio.NewWriter(file)
+				w := bufio.NewWriter(newFile)
 				for i := 0; i < wordsPerFile; i++ {
 					newWord := wordList[len(wordList)-1]
 					wordList = wordList[:len(wordList)-1]
@@ -76,7 +75,7 @@ func main() {
 					}
 				}
 				w.Flush()
-
+				newFile.Close()
 				if j%(filesPerFolder/100) == 0 {
 					percentage := 100*j/filesPerFolder + 1
 					fmt.Println("Progresso: ", dirFolder, "/", numberFolders, ": ", percentage, "%")
