@@ -36,7 +36,7 @@ func main() {
 		waitGroup.Add(1)
 
 		// Executa a busca por nome e conteúdo
-		search(&waitGroup, pattern, path, extensions, grep)
+		go search(&waitGroup, pattern, path, extensions, grep)
 
 	}
 
